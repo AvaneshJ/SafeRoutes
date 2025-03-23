@@ -16,12 +16,6 @@ SafeRoute Navigator is a Flutter-based safety-focused navigation app. It allows 
 
 ---
 
-## 🗘️ Screenshots (Optional - Add later)
-
-> _(Add your screenshots here using: ![screenshot](path-to-image))_
-
----
-
 ## 🧐 Tech Stack
 
 - **Flutter**
@@ -68,26 +62,6 @@ flutter run
 ```
 
 ---
-
-## 💻 Project Structure
-
-```
-lib/
-│
-├── models/
-│   └── review_model.dart
-│
-├── services/
-│   ├── geocoding_service.dart
-│   └── route_service.dart
-│
-├── widgets/
-│   ├── reviews_dialog.dart
-│   └── review_bottom_sheet.dart
-│
-└── screens/
-    └── map_screen.dart
-```
 
 ---
 
