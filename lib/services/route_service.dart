@@ -1,54 +1,29 @@
 import 'dart:convert';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gmap;
 import 'package:http/http.dart' as http;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:safety_app/const.dart';
 
 class RouteService {
-  final String _apiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
-
-  Future<Map<String, dynamic>> getRoute(
-    LatLng origin,
-    LatLng destination,
-  ) async {
+  Future<List<gmap.LatLng>> getRoute(gmap.LatLng start, gmap.LatLng end) async {
     final url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=$_apiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&key=AIzaSyB6Ve71LA21-geZ_tIU6FATqRx6umEuBCA';
 
     final response = await http.get(Uri.parse(url));
+    final data = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['routes'].isNotEmpty) {
-        final route = data['routes'][0];
-        final polylinePoints = route['overview_polyline']['points'];
-        final eta = route['legs'][0]['duration']['text'];
-        final distance = route['legs'][0]['distance']['text'];
-        final steps =
-            route['legs'][0]['steps']
-                .map<String>((step) => step['html_instructions'].toString())
-                .toList();
-
-        return {
-          'polyline': _createPolyline(polylinePoints),
-          'eta': eta,
-          'distance': distance,
-          'steps': steps,
-        };
-      }
+    if (data['status'] == 'OK') {
+      final points = _decodePolyline(
+        data['routes'][0]['overview_polyline']['points'],
+      );
+      return points;
+    } else {
+      print("Route fetch error: ${data['status']}");
+      return [];
     }
-    throw Exception('Failed to load route');
   }
 
-  Polyline _createPolyline(String encodedPolyline) {
-    List<LatLng> points = _decodePolyline(encodedPolyline);
-    return Polyline(
-      polylineId: const PolylineId('route'),
-      color: const Color(0xFF4285F4),
-      width: 5,
-      points: points,
-    );
-  }
-
-  List<LatLng> _decodePolyline(String encoded) {
-    List<LatLng> polyline = [];
+  List<gmap.LatLng> _decodePolyline(String encoded) {
+    List<gmap.LatLng> polylinePoints = [];
     int index = 0, len = encoded.length;
     int lat = 0, lng = 0;
 
@@ -59,8 +34,8 @@ class RouteService {
         result |= (b & 0x1f) << shift;
         shift += 5;
       } while (b >= 0x20);
-      int dLat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lat += dLat;
+      int dlat = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
+      lat += dlat;
 
       shift = 0;
       result = 0;
@@ -69,12 +44,11 @@ class RouteService {
         result |= (b & 0x1f) << shift;
         shift += 5;
       } while (b >= 0x20);
-      int dLng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lng += dLng;
+      int dlng = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
+      lng += dlng;
 
-      polyline.add(LatLng(lat / 1E5, lng / 1E5));
+      polylinePoints.add(gmap.LatLng(lat / 1E5, lng / 1E5));
     }
-
-    return polyline;
+    return polylinePoints;
   }
 }

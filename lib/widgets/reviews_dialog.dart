@@ -4,7 +4,7 @@ import '../models/review_model.dart';
 class ReviewDialog extends StatelessWidget {
   final List<Review> reviews;
 
-  const ReviewDialog({super.key, required this.reviews});
+  const ReviewDialog({required this.reviews, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,15 +18,16 @@ class ReviewDialog extends StatelessWidget {
           itemBuilder: (context, index) {
             final review = reviews[index];
             return ListTile(
-              leading: CircleAvatar(child: Text('${review.rating}⭐')),
-              title: Text(review.review),
+              title: Text(review.username),
+              subtitle: Text(review.reviewText),
+              trailing: Text('${review.rating}/5'),
             );
           },
         ),
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.of(context).pop(),
           child: const Text('Close'),
         ),
       ],

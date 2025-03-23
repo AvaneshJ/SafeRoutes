@@ -1,6 +1,11 @@
 class Review {
+  final String username;
+  final String reviewText;
   final int rating;
-  final String review;
 
-  Review({required this.rating, required this.review});
+  Review({
+    required this.username,
+    required this.reviewText,
+    required this.rating,
+  });
 }
