@@ -3,6 +3,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../services/route_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
+import 'firebase_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -112,6 +115,46 @@ class _MapScreenState extends State<MapScreen> {
       _mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
     }
   }
+
+  late FirebaseService _firebaseService;
+final Set<Marker> _markers = {};
+
+@override
+void initState() {
+  super.initState();
+  _firebaseService = FirebaseService();
+  _loadSafetyReviews();
+}
+
+void _loadSafetyReviews() {
+  _firebaseService.getSafetyReviews().listen((querySnapshot) {
+    setState(() {
+      _markers.clear();
+      for (var doc in querySnapshot.docs) {
+        GeoPoint location = doc['location'];
+        _markers.add(
+          Marker(
+            markerId: MarkerId(doc.id),
+            position: LatLng(location.latitude, location.longitude),
+            infoWindow: InfoWindow(
+              title: doc['userName'],
+              snippet: '${doc['reviewText']}\nRating: ${doc['rating']}/5',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              _getMarkerHue(doc['rating']),
+            ),
+          ),
+        );
+      }
+    });
+  });
+}
+
+double _getMarkerHue(double rating) {
+  if (rating < 2) return BitmapDescriptor.hueRed;  // Dangerous
+  if (rating < 4) return BitmapDescriptor.hueOrange; // Caution
+  return BitmapDescriptor.hueGreen; // Safe
+}
 
   @override
   Widget build(BuildContext context) {
