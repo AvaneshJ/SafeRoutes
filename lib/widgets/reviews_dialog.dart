@@ -1,35 +1,24 @@
-import 'package:flutter/material.dart';
-import '../models/review_model.dart';
+// Add to state class
+final FirebaseService _firebaseService = FirebaseService();
+double _currentRating = 3.0;
+final TextEditingController _reviewController = TextEditingController();
 
-class ReviewDialog extends StatelessWidget {
-  final List<Review> reviews;
-
-  const ReviewDialog({super.key, required this.reviews});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Reviews'),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: reviews.length,
-          itemBuilder: (context, index) {
-            final review = reviews[index];
-            return ListTile(
-              leading: CircleAvatar(child: Text('${review.rating}⭐')),
-              title: Text(review.review),
-            );
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
-      ],
-    );
-  }
-}
+// Modify submit button
+ElevatedButton(
+  onPressed: () async {
+    final position = await Geolocator.getCurrentPosition();
+    final user = FirebaseAuth.instance.currentUser;
+    
+    if (user != null) {
+      await _firebaseService.submitSafetyReview(
+        reviewText: _reviewController.text,
+        rating: _currentRating,
+        position: position,
+        userId: user.uid,
+        userName: user.displayName ?? 'Anonymous',
+      );
+      Navigator.of(context).pop();
+    }
+  },
+  child: Text('Submit Safety Report'),
+)

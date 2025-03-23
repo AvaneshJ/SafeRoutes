@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 import 'screens/map_screen.dart';
+// Add these imports
+import 'package:firebase_core/firebase_core.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
+  runApp(MyApp());
+}
 
 void main() {
   runApp(const MyApp());
