@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../const.dart'; // Make sure your GOOGLE_MAPS_API_KEY is properly imported from here
+import '../const.dart'; 
 
 class PlaceService {
   Future<List<String>> fetchSuggestions(String input) async {
