@@ -6,7 +6,7 @@ import 'package:safety_app/const.dart';
 class RouteService {
   Future<List<gmap.LatLng>> getRoute(gmap.LatLng start, gmap.LatLng end) async {
     final url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&key=AIzaSyB6Ve71LA21-geZ_tIU6FATqRx6umEuBCA';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&key=YOUR_API_KEY';
 
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
