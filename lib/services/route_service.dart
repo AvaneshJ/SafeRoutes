@@ -1,23 +1,38 @@
 import 'dart:convert';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gmap;
 import 'package:http/http.dart' as http;
-import 'package:safety_app/const.dart';
+import '../const.dart';
 
 class RouteService {
   Future<List<gmap.LatLng>> getRoute(gmap.LatLng start, gmap.LatLng end) async {
     final url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&key=YOUR_API_KEY';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&key=$GOOGLE_MAPS_API_KEY';
 
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
 
     if (data['status'] == 'OK') {
-      final points = _decodePolyline(
-        data['routes'][0]['overview_polyline']['points'],
-      );
-      return points;
+      return _decodePolyline(data['routes'][0]['overview_polyline']['points']);
     } else {
       print("Route fetch error: ${data['status']}");
+      return [];
+    }
+  }
+
+  Future<List<gmap.LatLng>> getAlternativeSafeRoute(
+    gmap.LatLng start,
+    gmap.LatLng end,
+  ) async {
+    final url =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&alternatives=true&key=$GOOGLE_MAPS_API_KEY';
+
+    final response = await http.get(Uri.parse(url));
+    final data = json.decode(response.body);
+
+    if (data['status'] == 'OK' && data['routes'].length > 1) {
+      return _decodePolyline(data['routes'][1]['overview_polyline']['points']);
+    } else {
+      print("Alternative route fetch error: ${data['status']}");
       return [];
     }
   }
