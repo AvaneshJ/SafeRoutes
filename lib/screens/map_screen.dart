@@ -5,6 +5,8 @@ import 'package:geolocator/geolocator.dart';
 import '../models/review_model.dart';
 import '../services/geocoding_service.dart';
 import '../services/route_service.dart';
+import '../widgets/review_bottom_sheet.dart';
+import '../widgets/reviews_dialog.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -19,12 +21,12 @@ class _MapScreenState extends State<MapScreen> {
   final GeocodingService _geocodingService = GeocodingService();
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Review> _reviews = [];
   gmap.LatLng? _currentPosition;
   gmap.LatLng? _destinationPosition;
   Map<gmap.PolylineId, gmap.Polyline> polylines = {};
-  Set<gmap.Marker> _markers = {};
-  bool _showReviewSheet = false;
+  final Set<gmap.Marker> _markers = {};
+  List<Review> reviews = [];
+  bool _showReviewButton = false;
 
   @override
   void initState() {
@@ -56,9 +58,8 @@ class _MapScreenState extends State<MapScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+          permission == LocationPermission.deniedForever)
         return null;
-      }
     }
     return await Geolocator.getCurrentPosition();
   }
@@ -80,11 +81,6 @@ class _MapScreenState extends State<MapScreen> {
 
       final controller = await _mapController.future;
       controller.animateCamera(gmap.CameraUpdate.newLatLngZoom(position, 14));
-
-      await _drawRoute();
-      setState(() {
-        _showReviewSheet = true; // Auto show review sheet after search
-      });
     } else {
       ScaffoldMessenger.of(
         context,
@@ -92,60 +88,133 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _drawRoute() async {
+  double _calculateAverageRating() {
+    if (reviews.isEmpty) return 0;
+    double total = reviews.fold(0, (sum, r) => sum + r.rating);
+    return total / reviews.length;
+  }
+
+  Color _getPolylineColor(double avgRating) {
+    if (avgRating >= 4) return Colors.green;
+    if (avgRating >= 2.5) return Colors.yellow;
+    if (avgRating >= 1 && avgRating <= 2) return Colors.red;
+    return Colors.blue;
+  }
+
+  Future<void> _drawRouteWithSafety() async {
     if (_currentPosition == null || _destinationPosition == null) return;
+
     final routePoints = await _routeService.getRoute(
       _currentPosition!,
       _destinationPosition!,
     );
     if (routePoints.isEmpty) return;
 
+    double avgRating = _calculateAverageRating();
+    Color routeColor = _getPolylineColor(avgRating);
+
+    debugPrint("Average Safety Rating: $avgRating");
+    debugPrint(
+      "Initial Route Color: ${avgRating >= 1 && avgRating <= 2 ? "Red (Unsafe)" : "Final Safety Color"}",
+    );
+
+    // Show red route only if avgRating is between 1-2, else show default color
     setState(() {
       polylines.clear();
       polylines[gmap.PolylineId("route")] = gmap.Polyline(
         polylineId: const gmap.PolylineId("route"),
-        color: Colors.blue,
+        color: (avgRating >= 1 && avgRating <= 2) ? Colors.red : routeColor,
         width: 6,
         points: routePoints,
       );
     });
-  }
 
-  void _addReview(Review review) {
+    if (avgRating >= 1 && avgRating <= 2) {
+      await Future.delayed(const Duration(seconds: 3));
+
+      // Change to safety-based color
+      setState(() {
+        polylines[gmap.PolylineId("route")] = gmap.Polyline(
+          polylineId: const gmap.PolylineId("route"),
+          color: routeColor,
+          width: 6,
+          points: routePoints,
+        );
+      });
+    }
+
     setState(() {
-      _reviews.add(review);
+      _showReviewButton = true;
     });
   }
 
-  void _viewReviews() {
+  Future<void> _handleGetDirections() async {
+    final position = await _getCurrentLocation();
+    if (position == null) {
+      await Geolocator.openLocationSettings();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enable GPS')));
+      return;
+    }
+    setState(
+      () =>
+          _currentPosition = gmap.LatLng(position.latitude, position.longitude),
+    );
+
+    _drawRouteWithSafety();
+  }
+
+  void _showReviewBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return ReviewBottomSheet(
+          onSubmit: (review) {
+            setState(() {
+              reviews.add(review);
+              _showReviewButton = false;
+            });
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("Review Submitted!")));
+          },
+        );
+      },
+    );
+  }
+
+  void _showReviewsDialog() {
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text("Reviews"),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _reviews.length,
-                itemBuilder: (ctx, index) {
-                  final r = _reviews[index];
-                  return ListTile(
-                    title: Text(r.username),
-                    subtitle: Text(r.reviewText),
-                    trailing: Text('${r.rating}⭐'),
-                  );
-                },
-              ),
-            ),
-          ),
+      builder: (context) => ReviewDialog(reviews: reviews),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Safety Map')),
+      appBar: AppBar(
+        title: const Text('Safety Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.reviews),
+            onPressed: () {
+              if (reviews.isNotEmpty) {
+                _showReviewsDialog();
+              } else {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('No reviews yet')));
+              }
+            },
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           gmap.GoogleMap(
@@ -160,7 +229,6 @@ class _MapScreenState extends State<MapScreen> {
             myLocationEnabled: true,
           ),
 
-          // 🔍 Search Bar
           Positioned(
             top: 16,
             left: 16,
@@ -172,10 +240,6 @@ class _MapScreenState extends State<MapScreen> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: "Search destination...",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
                   filled: true,
                   fillColor: Colors.white,
                   prefixIcon: const Icon(Icons.search),
@@ -188,113 +252,35 @@ class _MapScreenState extends State<MapScreen> {
                     },
                   ),
                 ),
-                onSubmitted: (value) {
-                  if (value.isNotEmpty) _searchLocation(value);
-                },
               ),
             ),
           ),
 
-          // 📄 Review Sheet Auto Show
-          if (_showReviewSheet)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          Positioned(
+            bottom: 20,
+            left: 16,
+            right: 16,
+            child: Column(
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.directions),
+                  label: const Text('Get Direction'),
+                  onPressed:
+                      _destinationPosition != null
+                          ? _handleGetDirections
+                          : null,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Rate this Area',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    const SizedBox(height: 10),
-                    ReviewForm(
-                      onSubmit: (review) {
-                        _addReview(review);
-                        _viewReviews();
-                        setState(() => _showReviewSheet = false);
-                      },
-                    ),
-                    const SizedBox(height: 20), // ✅ Extra padding below Submit
-                  ],
-                ),
-              ),
+                if (_showReviewButton)
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.rate_review),
+                    label: const Text('Submit Review'),
+                    onPressed: _showReviewBottomSheet,
+                  ),
+              ],
             ),
+          ),
         ],
       ),
-    );
-  }
-}
-
-class ReviewForm extends StatefulWidget {
-  final Function(Review) onSubmit;
-  const ReviewForm({super.key, required this.onSubmit});
-
-  @override
-  State<ReviewForm> createState() => _ReviewFormState();
-}
-
-class _ReviewFormState extends State<ReviewForm> {
-  double rating = 3;
-  final TextEditingController reviewController = TextEditingController();
-  final TextEditingController usernameController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: usernameController,
-          decoration: const InputDecoration(
-            labelText: 'Your Name',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Slider(
-          value: rating,
-          min: 1,
-          max: 5,
-          divisions: 4,
-          label: "${rating.round()} Stars",
-          onChanged: (value) => setState(() => rating = value),
-        ),
-        TextField(
-          controller: reviewController,
-          decoration: const InputDecoration(
-            labelText: 'Write your review',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
-        ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () {
-            if (usernameController.text.isNotEmpty &&
-                reviewController.text.isNotEmpty) {
-              widget.onSubmit(
-                Review(
-                  username: usernameController.text,
-                  reviewText: reviewController.text,
-                  rating: rating.round(),
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please fill all fields')),
-              );
-            }
-          },
-          child: const Text('Submit & View Reviews'),
-        ),
-      ],
     );
   }
 }
