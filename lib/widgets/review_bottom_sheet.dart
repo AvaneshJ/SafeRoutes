@@ -18,7 +18,14 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom:
+            MediaQuery.of(context).viewInsets.bottom +
+            16, // Keyboard padding fix
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -58,10 +65,10 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
                     Review(
                       username: usernameController.text,
                       reviewText: reviewController.text,
-                      rating: rating.round(),
+                      rating: rating.round(), // Fixed: Convert double to int
                     ),
                   );
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Safe pop
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please fill all fields')),
@@ -70,7 +77,7 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
               },
               child: const Text('Submit & View Reviews'),
             ),
-            const SizedBox(height: 20), // Padding below the submit button
+            const SizedBox(height: 20),
           ],
         ),
       ),
