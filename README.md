@@ -1,4 +1,4 @@
-# 🚀 SafeRoute Navigator - Flutter Safety Navigation App
+# 🚀 SafeRoute Navigator - Safety Navigation App
 
 SafeRoute Navigator is a Flutter-based safety-focused navigation app. It allows users to search any destination, draw a route from their live location, get distance and ETA, start the journey, and view or submit safety reviews for any location. It also integrates with **Google Cloud Vertex AI** to offer intelligent, personalized assistance based on user behavior.
 
