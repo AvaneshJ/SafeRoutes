@@ -1,96 +1,119 @@
-🚀 SafeRoute Navigator - Flutter Safety Navigation App
-SafeRoute Navigator is a Flutter-based safety-focused navigation app. It allows users to search any destination, draw a route from their live location, get distance and ETA, start the journey, and view or submit safety reviews for any location. It also leverages Google Cloud Vertex AI to learn from user behavior and enhance interaction for personalized experiences.
+# 🚀 SafeRoute Navigator - Flutter Safety Navigation App
 
-📱 Features
-✅ Live Location Tracking
-✅ Search Places with Geocoding
-✅ Route Drawing (Polyline) from Current Location to Destination
-✅ Distance & ETA Calculation using Google Directions API
-✅ Start Journey with Navigation Details
-✅ Location Reviews - Submit & View
-✅ Responsive UI with Google Maps
-✅ AI-Enhanced Interaction using Vertex AI
+SafeRoute Navigator is a Flutter-based safety-focused navigation app. It allows users to search any destination, draw a route from their live location, get distance and ETA, start the journey, and view or submit safety reviews for any location. It also integrates with **Google Cloud Vertex AI** to offer intelligent, personalized assistance based on user behavior.
 
-🧐 Tech Stack
-Flutter
+---
 
-Google Maps SDK
+## 📱 Features
 
-Google Directions API
+✅ **Live Location Tracking**  
+✅ **Search Places with Geocoding**  
+✅ **Route Drawing (Polyline) from Current Location to Destination**  
+✅ **Distance & ETA Calculation using Google Directions API**  
+✅ **Start Journey with Navigation Details**  
+✅ **Location Reviews - Submit & View**  
+✅ **Responsive UI with Google Maps**  
+✅ **AI-Enhanced Interaction using Vertex AI**
 
-Geocoding API
+---
 
-Geolocator Plugin
+## 💮 Tech Stack
 
-Google Cloud Vertex AI
+- **Flutter**
+- **Google Maps SDK**
+- **Google Directions API**
+- **Geocoding API**
+- **Geolocator Plugin**
+- **Google Cloud Vertex AI**
+- **Firebase Firestore** *(optional for review storage)*
 
-Firebase Firestore (Optional for review storage)
+---
 
-🔧 Setup & Installation
-1️⃣ Clone the Repository
-bash
-Copy
-Edit
+## 🔧 Setup & Installation
+
+### 1️⃣ Clone the Repository
+
+```bash
 git clone https://github.com/your-username/safe-route-navigator.git
 cd safe-route-navigator
-2️⃣ Install Dependencies
-bash
-Copy
-Edit
+```
+
+### 2️⃣ Install Dependencies
+
+```bash
 flutter pub get
-3️⃣ Setup API Keys
-Enable the following APIs in your Google Cloud Console:
+```
 
-Maps SDK for Android/iOS
+### 3️⃣ Setup API Keys
 
-Directions API
+- Enable the following APIs in your **Google Cloud Console**:
+  - Maps SDK for Android/iOS
+  - Directions API
+  - Geocoding API
+  - Places API *(if needed)*
+  - Vertex AI API *(for smart assistant features)*
 
-Geocoding API
+- Add your API Key to the appropriate files:
 
-Places API (if required)
+**Android** (`android/app/src/main/AndroidManifest.xml`):
 
-Vertex AI API (for AI interaction features)
+```xml
+<meta-data android:name="com.google.android.geo.API_KEY"
+           android:value="YOUR_API_KEY"/>
+```
 
-Add your API Key in AndroidManifest.xml & AppDelegate.swift:
+**iOS** (`ios/Runner/AppDelegate.swift`):
 
-xml
-Copy
-Edit
-<meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_API_KEY"/>
-4️⃣ Run the App
-bash
-Copy
-Edit
+```swift
+GMSServices.provideAPIKey("YOUR_API_KEY")
+```
+
+### 4️⃣ Run the App
+
+```bash
 flutter run
-✍️ How to Use
-Search a destination using the search bar.
+```
 
-The app fetches your live location and draws the route to the destination.
+---
 
-View ETA and distance.
+## ✍️ How to Use
 
-Start the journey for step-by-step navigation.
+1. Use the search bar to enter a destination.
+2. The app fetches your live location and draws a route to the destination.
+3. View Estimated Time of Arrival (ETA) and distance.
+4. Tap **Start Journey** to begin step-by-step navigation.
+5. Tap the **Review** button to submit or read safety insights for that location.
+6. Interact with the built-in AI assistant powered by Vertex AI for smart suggestions and route assistance.
 
-Submit or view reviews for the area to ensure safety insights.
+---
 
-Interact with the app's AI assistant, powered by Vertex AI, for smarter suggestions and responses.
+## 📌 Future Improvements
 
-📌 Future Improvements
-Firebase integration for real-time review storage
+- Firebase integration for real-time review storage  
+- Live location sharing during the journey  
+- Voice-based turn-by-turn navigation  
+- Heatmap overlays based on user safety reviews  
+- **Personalized AI Assistant using Vertex AI to learn user behavior**  
+- **Smart route re-routing based on safety scores and historical data**
 
-Live location updates during the journey
+---
 
-Voice-based turn-by-turn navigation
+## 📄 License
 
-Safety rating heatmap
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Personalized AI travel assistant using Vertex AI
+---
 
-Behavioral learning to adapt suggestions and routing preferences
+## 🙌 Contributions
 
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+Pull requests are welcome!  
+If you have suggestions for improvements, feel free to open an issue or submit a feature request.
 
-🙌 Contributions
-Pull requests are welcome! Feel free to open issues or suggest new features.
+---
+
+## 🤖 Powered By
+
+- [Google Cloud Vertex AI](https://cloud.google.com/vertex-ai)  
+- [Flutter](https://flutter.dev)  
+- [Google Maps Platform](https://developers.google.com/maps)
 
