@@ -67,11 +67,7 @@ SafeRoute is designed to provide a safe and secure commuting experience for wome
 - Functional login and authentication system.
 - Interactive map showing real-time safety ratings.
 - Panic button feature working with Firebase Cloud Messaging.
-- User-generated safety ratings successfully stored in Firestore.
-
-## Screenshots
-
-(Include relevant screenshots of the app interface here.)
+- User-generated safety ratings successfully stored in Firestore.
 
 ## License
 
